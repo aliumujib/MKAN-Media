@@ -50,9 +50,9 @@ func makeSoundCloudParams() url.Values {
 	param := url.Values{}
 	env := viper.GetString("env")
 
-	param.Add("client_id", viper.GetString(env+".sound_cloud_client_id"))
+	param.Add("client_id", viper.GetString(env+".sources.soundcloud.sound_cloud_client_id"))
 	param.Add("grant_type", "client_credentials")
-	param.Add("client_secret", viper.GetString(env+".sound_cloud_client_secret"))
+	param.Add("client_secret", viper.GetString(env+".sources.soundcloud.sound_cloud_client_secret"))
 	return param
 }
 

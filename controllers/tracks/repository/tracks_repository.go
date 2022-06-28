@@ -191,8 +191,3 @@ func (repository SoundCloudTracksRepository) GetCurrentAuthToken(writer Response
 		Error:   nil,
 	})
 }
-
-//home -> playlists and recommended tracks random everyday->()
-//getAuthToken
-
-//youtube stuff
