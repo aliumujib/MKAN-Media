@@ -2,6 +2,10 @@ package repository
 
 import (
 	"fmt"
+	. "net/http"
+	"strconv"
+	"time"
+
 	dbs "github.com/MKA-Nigeria/mkanmedia-go/config/db"
 	httplib "github.com/MKA-Nigeria/mkanmedia-go/config/http"
 	. "github.com/MKA-Nigeria/mkanmedia-go/config/responses"
@@ -9,9 +13,6 @@ import (
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
 	"github.com/spf13/viper"
 	"gopkg.in/mgo.v2"
-	. "net/http"
-	"strconv"
-	"time"
 )
 
 type TracksRepository interface {
@@ -36,7 +37,7 @@ func NewSoundCloudRepository() TracksRepository {
 	env := viper.GetString("env")
 
 	if env == "prod" {
-		db = dbs.ConnectMongodbTLS()
+		db = dbs.NewClient()
 	} else {
 		db = dbs.ConnectMongodb()
 	}

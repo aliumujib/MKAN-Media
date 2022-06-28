@@ -1,24 +1,53 @@
 package config
 
 import (
-	"fmt"
 	"log"
+	"os"
 
-	"github.com/spf13/viper"
+	"github.com/MKA-Nigeria/mkanmedia-go/logger"
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
 
-func LoadConfig() {
-	viper.AddConfigPath("config")
+var Env env
 
-	viper.SetConfigName("env")
+const defaultPort = "8082"
+const defaultMongoUrl = "mongodb://localhost:27017"
 
-	viper.SetConfigType("json")
-
-	// Searches for config file in given paths and read it
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+func init() {
+	// load env before reading from env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("err loading: %v", err)
 	}
 
-	// Confirm which config file is used
-	fmt.Printf("Using s: %s\n", viper.ConfigFileUsed())
+	// load end config
+	e := loadConfig()
+
+	// validate env being loaded
+	if err := e.Validate(); err != nil {
+		logger.DefaultLogger.WithFields(logrus.Fields{"type": "env_error", "stack": err}).Error("Invalid environment variables")
+	}
+
+	Env = e
+}
+
+func loadConfig() env {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	mongoUrl := os.Getenv("MONGO_URL")
+	if mongoUrl == "" {
+		mongoUrl = defaultMongoUrl
+	}
+
+	return env{
+		ENV:                       os.Getenv("ENV"),
+		PORT:                      port,
+		MONGO_URL:                 mongoUrl,
+		SOUND_CLOUD_CLIENT_ID:     os.Getenv("SOUND_CLOUD_CLIENT_ID"),
+		SOUND_CLOUD_CLIENT_SECRET: os.Getenv("SOUND_CLOUD_CLIENT_SECRET"),
+	}
 }

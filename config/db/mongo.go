@@ -5,82 +5,121 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
+	"time"
 
-	"github.com/spf13/viper"
+	"github.com/MKA-Nigeria/mkanmedia-go/config"
 	mgo "gopkg.in/mgo.v2"
 )
 
-//ConnectMongodbURL returns a connection to a mongodb instance through a connection string in the configuration file
-func ConnectMongodbURL(url string) *mgo.Session {
-	env := viper.GetString("env")
-
-	session, _ := mgo.Dial(viper.GetString(env + ".db.mongo.url"))
-
-	err := session.Ping()
-
-	if err != nil {
-		log.Printf("db connection error: %s", err.Error())
-	}
-	return session
-}
-
-//ConnectMongodb returns a connection to a mongodb instance through a connection options without ssl being true in the configuration file
+//ConnectMongodb returns a connection to a mongodb instance through a connection string in the configuration file
 func ConnectMongodb() *mgo.Session {
-	env := viper.GetString("env")
+	url := config.Env.MONGO_URL
 
+	url = strings.Split(url, "?")[0]
+	//connect URL:
+	dialInfo, err := mgo.ParseURL(url)
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		conn, err := tls.Dial("tcp", addr.String(), &tls.Config{})
+		return conn, err
+	}
+	//Here is the session you are looking for. Up to you from here ;)
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		log.Printf("db connection error: %s", err.Error())
+	}
+	log.Printf("db connection: %s", session)
+	return session
+}
+
+//ConnectMongodbURL returns a connection to a mongodb instance through a connection string in the configuration file
+func ConnectMongodbURL() *mgo.Session {
+	url := config.Env.MONGO_URL
+
+	url = strings.Split(url, "?")[0]
+
+	dialInfo, err := mgo.ParseURL(url)
 	params := &mgo.DialInfo{
-		Username: viper.GetString(env + ".db.mongo.user"),
-		Password: viper.GetString(env + ".db.mongo.password"),
-		Addrs:    viper.GetStringSlice(env + ".db.mongo.addrs"),
-		Database: viper.GetString(env + ".db.mongo.db"),
+		Username: dialInfo.Username,
+		Password: dialInfo.Password,
+		Addrs:    dialInfo.Addrs,
+		Database: "admin",
+	}
+	params.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		conn, err := tls.Dial("tcp", addr.String(), &tls.Config{})
+		return conn, err
+	}
+	session, errr := mgo.DialWithInfo(params)
+	if errr != nil {
+		fmt.Println(errr)
+	}
+	err = session.Ping()
+	if err != nil {
+		log.Printf("db connection error: %s", err.Error())
+	}
+	log.Printf("db connection: %s", session)
+	return session
+}
+
+// TODO: Should not Fatalf if error occurs
+func NewClient() *mgo.Session {
+
+	dialInfo := getMongoDialInfo()
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		log.Fatalf("db connection error: %v", err)
 	}
 
-	session, _ := mgo.DialWithInfo(params)
-
-	err := session.Ping()
+	log.Printf("connected to MongoDB successfully")
+	err = session.Ping()
 
 	if err != nil {
 		log.Printf("db connection error: %s", err.Error())
 	}
+	log.Printf("db connection: %s", session)
+
 	return session
 }
 
-//ConnectMongodbTLS returns a connection to a mongodb instance through a connection options with ssl set to true in the configuration file
-func ConnectMongodbTLS() *mgo.Session {
-	env := viper.GetString("env")
+func getMongoDialInfo() *mgo.DialInfo {
 
-	params := &mgo.DialInfo{
-		Username: viper.GetString(env + ".db.mongo.user"),
-		Password: viper.GetString(env + ".db.mongo.password"),
-		Addrs:    viper.GetStringSlice(env + ".db.mongo.addrs"),
-		Database: viper.GetString(env + ".db.mongo.db"),
+	url := config.Env.MONGO_URL
+	url = strings.Split(url, "?")[0]
+	fmt.Println(url)
+
+	dialInfo, err := mgo.ParseURL(url)
+	if err != nil {
+		fmt.Println(err)
 	}
-
+	dialInfo.Timeout = 5 * time.Second
+	params := &mgo.DialInfo{
+		Username: dialInfo.Username,
+		Password: dialInfo.Password,
+		Addrs:    dialInfo.Addrs,
+		Database: "admin",
+	}
 	params.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		conn, err := tls.Dial("tcp", addr.String(), &tls.Config{})
 		return conn, err
 	}
 
-	session, _ := mgo.DialWithInfo(params)
-
-	err := session.Ping()
-
-	fmt.Println(err)
-	if err != nil {
-		log.Printf("db connection error: %s", err.Error())
-	}
-	return session
+	return params
 }
 
-//CreateUniqueIndex creates a unque mogodb index
-func CreateUniqueIndex(c *mgo.Collection, data []string) error {
+var indexes = []struct {
+	coll  string
+	index mgo.Index
+}{
+	{
+		coll:  "accounts",
+		index: mgo.Index{Key: []string{"email"}, Unique: true},
+	},
+}
 
-	for _, key := range data {
-		index := mgo.Index{
-			Key:    []string{key},
-			Unique: true,
-		}
-		if err := c.EnsureIndex(index); err != nil {
+func ensureIndexes(db *mgo.Database) error {
+	for _, index := range indexes {
+		err := db.C(index.coll).EnsureIndex(index.index)
+		if err != nil {
 			return err
 		}
 	}
