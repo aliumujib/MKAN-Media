@@ -1,38 +1,25 @@
 package main
 
 import (
-	"flag"
+	"log"
+	"net/http"
+
 	"github.com/MKA-Nigeria/mkanmedia-go/config"
 	"github.com/MKA-Nigeria/mkanmedia-go/routes"
 	"github.com/rs/cors"
-	"github.com/spf13/viper"
-	"log"
-	"net/http"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
 
-	//environment flag parser
-	environment := flag.String("env", "dev", "the environment in which the application should run")
-	flag.Parse()
+	logrus.SetFormatter(&logrus.TextFormatter{})
 
-	config.LoadConfig()
-
-	switch *environment {
-	case "prod":
-		viper.Set("env", "prod")
-	case "dev":
-		viper.Set("env", "dev")
-	}
-
-	log.Printf("%s environment started", viper.Get("env"))
+	log.Printf("%s environment started", config.Env.ENV)
 }
 
 func main() {
 
-	env := viper.GetString("env")
-
-	port := viper.GetString(env + ".port")
+	port := config.Env.PORT
 
 	//	APPLY MIDDLEWARES
 	c := cors.New(cors.Options{

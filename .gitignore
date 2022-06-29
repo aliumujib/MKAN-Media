@@ -9,3 +9,5 @@
 /.idea
 *.json
 
+# Environment Variables
+.env
