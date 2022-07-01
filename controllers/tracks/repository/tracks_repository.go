@@ -2,6 +2,8 @@ package repository
 
 import (
 	"fmt"
+	"github.com/MKA-Nigeria/mkanmedia-go/config"
+	mgo "go.mongodb.org/mongo-driver/mongo"
 	. "net/http"
 	"strconv"
 	"time"
@@ -11,8 +13,6 @@ import (
 	. "github.com/MKA-Nigeria/mkanmedia-go/config/responses"
 	"github.com/MKA-Nigeria/mkanmedia-go/controllers/tracks"
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
-	"github.com/spf13/viper"
-	"gopkg.in/mgo.v2"
 )
 
 type TracksRepository interface {
@@ -33,18 +33,14 @@ type SoundCloudTracksRepository struct {
 
 func NewSoundCloudRepository() TracksRepository {
 	client := Client{Timeout: time.Duration(1) * time.Second}
-	var db *mgo.Session
-	env := viper.GetString("env")
+	var db *mgo.Client
+	env := config.Env
 
-	if env == "prod" {
-		db = dbs.NewClient()
-	} else {
-		db = dbs.ConnectMongodb()
-	}
+	db = dbs.ConnectMongodb()
 
 	return SoundCloudTracksRepository{
-		auth:        tracks.AuthImpl{Client: &client, Cache: dbs.ConnectRedis()},
-		store:       tracks.StoreImpl{TracksCollection: db.DB("mkan-media").C("tracks"), PlaylistCollection: db.DB("mkan-media").C("playlists")},
+		auth:        tracks.AuthImpl{Client: &client, Cache: dbs.ConnectRedis(), SoundCloudClientId: env.SOUND_CLOUD_CLIENT_ID, SoundCloudClientSecret: env.SOUND_CLOUD_CLIENT_SECRET},
+		store:       tracks.StoreImpl{TracksCollection: db.Database("mkan-media").Collection("tracks"), PlaylistCollection: db.Database("mkan-media").Collection("playlists")},
 		remote:      tracks.RemoteImpl{Client: &client, TracksStartUrl: tracks.TrackStartPoint, PlaylistsStartUrl: tracks.PlaylistStartPoint},
 		recommender: tracks.RecommenderImpl{Cache: dbs.ConnectRedis()},
 	}

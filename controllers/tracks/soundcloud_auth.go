@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
 	"github.com/go-redis/redis"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	. "net/http"
 	"net/url"
@@ -14,8 +13,10 @@ import (
 
 type AuthImpl struct {
 	//http client
-	Client *Client
-	Cache  *redis.Client
+	Client                 *Client
+	Cache                  *redis.Client
+	SoundCloudClientId     string
+	SoundCloudClientSecret string
 }
 
 func (auth AuthImpl) GetToken() (*models.TokenResponse, *error) {
@@ -46,18 +47,17 @@ func (auth AuthImpl) GetToken() (*models.TokenResponse, *error) {
 	return token, &err_
 }
 
-func makeSoundCloudParams() url.Values {
+func (auth AuthImpl) makeSoundCloudParams() url.Values {
 	param := url.Values{}
-	env := viper.GetString("env")
 
-	param.Add("client_id", viper.GetString(env+".sources.soundcloud.sound_cloud_client_id"))
+	param.Add("client_id", auth.SoundCloudClientId)
 	param.Add("grant_type", "client_credentials")
-	param.Add("client_secret", viper.GetString(env+".sources.soundcloud.sound_cloud_client_secret"))
+	param.Add("client_secret", auth.SoundCloudClientSecret)
 	return param
 }
 
 func (auth AuthImpl) authenticate() (*models.TokenResponse, *error) {
-	param := makeSoundCloudParams()
+	param := auth.makeSoundCloudParams()
 	newRequest, err := NewRequest(MethodPost, authEndPoint, strings.NewReader(param.Encode()))
 	if err != nil {
 		return nil, &err
