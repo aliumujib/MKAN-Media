@@ -11,7 +11,6 @@ import (
 
 var Env env
 
-const defaultPort = "8082"
 const defaultMongoUrl = "mongodb://localhost:27017"
 
 func init() {
@@ -35,9 +34,6 @@ func init() {
 
 func loadConfig() env {
 	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
 
 	mongoUrl := os.Getenv("MONGO_URL")
 	if mongoUrl == "" {
