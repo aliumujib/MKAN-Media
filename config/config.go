@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/MKA-Nigeria/mkanmedia-go/logger"
@@ -17,12 +17,13 @@ const defaultMongoUrl = "mongodb://localhost:27017"
 func init() {
 	// load env before reading from env
 	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Couldn't load .env file, are you in Prod?")
-	}
 
 	// load end config
 	e := loadConfig()
+
+	if err != nil && e.ENV != "prod" {
+		log.Fatalf("err loading: %v", err)
+	}
 
 	// validate env being loaded
 	if err := e.Validate(); err != nil {
@@ -43,10 +44,13 @@ func loadConfig() env {
 		mongoUrl = defaultMongoUrl
 	}
 
+	redisUrl := os.Getenv("REDIS_URL")
+
 	return env{
 		ENV:                       os.Getenv("ENV"),
 		PORT:                      port,
 		MONGO_URL:                 mongoUrl,
+		REDIS_URL:                 redisUrl,
 		SOUND_CLOUD_CLIENT_ID:     os.Getenv("SOUND_CLOUD_CLIENT_ID"),
 		SOUND_CLOUD_CLIENT_SECRET: os.Getenv("SOUND_CLOUD_CLIENT_SECRET"),
 	}
