@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/MKA-Nigeria/mkanmedia-go/logger"
@@ -18,7 +18,7 @@ func init() {
 	// load env before reading from env
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("err loading: %v", err)
+		fmt.Println("Couldn't load .env file, are you in Prod?")
 	}
 
 	// load end config
