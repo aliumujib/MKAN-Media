@@ -24,21 +24,20 @@ func constructAuthenticatedHeader(request *Request, accessToken string) *Request
 
 func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlist, *error) {
 	var playlists []models.Playlist
-	response, err := remote.fetchPlaylistsFromSoundCloud(remote.PlaylistsStartUrl, accessToken)
-	fmt.Println("Got first playlist list of size: ", len(response.Playlists))
-	if *err != nil {
-		return nil, err
-	}
-	playlists = append(response.Playlists)
+	url := remote.PlaylistsStartUrl
 
-	for response.NextUrl != nil && len(*response.NextUrl) > 0 {
-		fmt.Println("Current next is " + *response.NextUrl)
-		nextResponse, err := remote.fetchPlaylistsFromSoundCloud(*response.NextUrl, accessToken)
+	for &url != nil && len(url) > 0 {
+		fmt.Println("Current next is " + url)
+		nextResponse, err := remote.fetchPlaylistsFromSoundCloud(url, accessToken)
 		playlists = append(playlists, nextResponse.Playlists...)
 		if *err != nil {
 			return nil, err
 		}
-		response = nextResponse
+		if nextResponse.NextUrl == nil {
+			break
+		}
+
+		url = *nextResponse.NextUrl
 	}
 
 	fmt.Println("Returning all playlists with size ", len(playlists))
@@ -47,21 +46,20 @@ func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlis
 
 func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *error) {
 	var allTracks []models.Track
-	response, err := remote.fetchTracksFromSoundCloud(remote.TracksStartUrl, accessToken)
-	fmt.Println("Got first track list of size: ", len(response.Tracks))
-	if *err != nil {
-		return nil, err
-	}
-	allTracks = append(response.Tracks)
+	url := remote.TracksStartUrl
 
-	for response.NextUrl != nil && len(*response.NextUrl) > 0 {
-		fmt.Println("Current next is " + *response.NextUrl)
-		nextResponse, err := remote.fetchTracksFromSoundCloud(*response.NextUrl, accessToken)
+	for &url != nil && len(url) > 0 {
+		fmt.Println("Current next is " + url)
+		nextResponse, err := remote.fetchTracksFromSoundCloud(url, accessToken)
 		allTracks = append(allTracks, nextResponse.Tracks...)
 		if *err != nil {
 			return nil, err
 		}
-		response = nextResponse
+		if nextResponse.NextUrl == nil {
+			break
+		}
+
+		url = *nextResponse.NextUrl
 	}
 
 	fmt.Println("Returning all tracks with size ", len(allTracks))
