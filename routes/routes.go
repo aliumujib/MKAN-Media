@@ -3,10 +3,13 @@ package routes
 import (
 	httplib "github.com/MKA-Nigeria/mkanmedia-go/config/http"
 	responses "github.com/MKA-Nigeria/mkanmedia-go/config/responses"
+	"github.com/MKA-Nigeria/mkanmedia-go/controllers/scheduling"
 	"github.com/MKA-Nigeria/mkanmedia-go/controllers/tracks/repository"
 	mws "github.com/MKA-Nigeria/mkanmedia-go/middlewares"
+	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 )
 
 //Router for all routes
@@ -25,13 +28,15 @@ func Router() *mux.Router {
 	// AUDIO  ROUTES
 	//************************
 	tracksRepo := repository.NewSoundCloudRepository()
+	scheduler := scheduling.NewMediaRefresher(gocron.NewScheduler(time.UTC), tracksRepo)
+
 	audioRoute := route.PathPrefix("/v1/audio").Subrouter()
-	audioRoute.HandleFunc("/refresh-tracks", tracksRepo.RefreshAudioData).Methods("GET")
 	audioRoute.HandleFunc("/fetch-all-tracks", tracksRepo.GetAllTracks).Methods("GET")
 	audioRoute.HandleFunc("/fetch-all-playlists", tracksRepo.GetAllPlaylists).Methods("GET")
 	audioRoute.HandleFunc("/current-auth", tracksRepo.GetCurrentAuthToken).Methods("GET")
 	audioRoute.HandleFunc("/recommendations", tracksRepo.GetRecommendedMedia).Methods("GET")
-	audioRoute.HandleFunc("/refresh-recommendations", tracksRepo.RefreshRecommendedMedia).Methods("GET")
+
+	scheduler.ScheduleMediaRefreshing()
 
 	return route
 }
