@@ -34,7 +34,7 @@ func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlis
 		if err != nil {
 			return nil, err
 		}
-		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) > 0 {
+		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) == 0 {
 			break
 		}
 
@@ -56,7 +56,7 @@ func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *er
 		if *err != nil {
 			return nil, err
 		}
-		if nextResponse.NextUrl == nil {
+		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) == 0 {
 			break
 		}
 
