@@ -2,10 +2,12 @@ package tracks
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
 	"io/ioutil"
 	. "net/http"
+	"sync"
 )
 
 type RemoteImpl struct {
@@ -66,8 +68,19 @@ func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *er
 	return allTracks, nil
 }
 
-func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(playlistsURl string, accessToken string) (models.PlaylistsResponse, *error) {
+func cleanup(data interface{}) (interface{}, *error) {
+	var err error
+	if r, ok := recover().(error); ok {
+		fmt.Println("An error occurred", r)
+		err = errors.New("internal error")
+		return nil, &err
+	}
+	return data, nil
+}
+
+func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(waitGroup sync.WaitGroup, playlistsURl string, accessToken string) (models.PlaylistsResponse, *error) {
 	playlists := models.PlaylistsResponse{}
+	defer waitGroup.Done()
 
 	request, err := NewRequest(MethodGet, playlistsURl, nil)
 	if err != nil {
@@ -99,7 +112,7 @@ func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(playlistsURl string, acces
 	return playlists, &err
 }
 
-func (remote RemoteImpl) fetchTracksFromSoundCloud(tracksURl string, accessToken string) (models.TracksResponse, *error) {
+func (remote RemoteImpl) fetchTracksFromSoundCloud(waitGroup sync.WaitGroup, tracksURl string, accessToken string) (models.TracksResponse, *error) {
 	tracks := models.TracksResponse{}
 
 	request, err := NewRequest(MethodGet, tracksURl, nil)
