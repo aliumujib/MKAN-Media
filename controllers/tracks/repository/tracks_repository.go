@@ -125,11 +125,13 @@ func (repository SoundCloudTracksRepository) getToken() (string, *error) {
 func (repository SoundCloudTracksRepository) RefreshAudioData(writer ResponseWriter, _ *Request) {
 	token, _ := repository.getToken()
 
+	fmt.Println("Fetching tracks")
 	trackCount, err := repository.refreshTrackData(token)
 	if respondedWithError(writer, err) {
 		return
 	}
 
+	fmt.Println("Fetching playlists")
 	playlistCount, err := repository.refreshPlaylistData(token)
 	if respondedWithError(writer, err) {
 		return

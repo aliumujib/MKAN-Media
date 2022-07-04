@@ -27,7 +27,7 @@ func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlis
 	url := remote.PlaylistsStartUrl
 
 	for len(url) > 0 {
-		fmt.Println("Current next is " + url)
+		fmt.Println("Current url is " + url)
 		nextResponse, err := remote.fetchPlaylistsFromSoundCloud(url, accessToken)
 		playlists = append(playlists, nextResponse.Playlists...)
 		if *err != nil {
@@ -45,7 +45,7 @@ func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *er
 	url := remote.TracksStartUrl
 
 	for len(url) > 0 {
-		fmt.Println("Current next is " + url)
+		fmt.Println("Current url is " + url)
 		nextResponse, err := remote.fetchTracksFromSoundCloud(url, accessToken)
 		allTracks = append(allTracks, nextResponse.Tracks...)
 		if *err != nil {
