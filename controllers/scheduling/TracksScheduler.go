@@ -26,7 +26,8 @@ func NewMediaRefresher(scheduler *gocron.Scheduler, tracksRepository repository.
 func (refresher MediaRefresherImpl) ScheduleMediaRefreshing() {
 	refresher.Scheduler.Every(24).Hours().Do(func() {
 		fmt.Println("Running scheduler tasks at ", time.Now().Format(time.RFC850))
-		refresher.TracksRepository.RefreshAudioData()
+		refresher.TracksRepository.RefreshTrackData()
+		refresher.TracksRepository.RefreshPlaylistData()
 		refresher.TracksRepository.RefreshRecommendedMedia()
 	})
 

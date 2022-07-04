@@ -22,7 +22,8 @@ type TracksRepository interface {
 	GetRecommendedMedia(writer ResponseWriter, request *Request)
 
 	RefreshRecommendedMedia()
-	RefreshAudioData()
+	RefreshTrackData()
+	RefreshPlaylistData()
 }
 
 type SoundCloudTracksRepository struct {
@@ -118,19 +119,26 @@ func (repository SoundCloudTracksRepository) getToken() (string, *error) {
 	return token.AccessToken, err
 }
 
-func (repository SoundCloudTracksRepository) RefreshAudioData() {
+func (repository SoundCloudTracksRepository) RefreshTrackData() {
 	token, _ := repository.getToken()
 
 	trackCount, err := repository.refreshTrackData(token)
 	if err != nil && *err != nil {
 		fmt.Println("Error and then return", *err)
 	}
+
+	fmt.Println("Stored -> tracks: size " + strconv.Itoa(trackCount))
+}
+
+func (repository SoundCloudTracksRepository) RefreshPlaylistData() {
+	token, _ := repository.getToken()
+
 	playlistCount, err := repository.refreshPlaylistData(token)
 	if err != nil && *err != nil {
 		fmt.Println("Error and then return", *err)
 	}
 
-	fmt.Println("Stored -> tracks: size " + strconv.Itoa(trackCount) + "\n Playlists: size " + strconv.Itoa(playlistCount))
+	fmt.Println("Stored -> Playlists: size " + strconv.Itoa(playlistCount))
 }
 
 func respondedWithError(writer ResponseWriter, err *error) bool {
