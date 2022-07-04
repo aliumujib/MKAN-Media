@@ -26,18 +26,14 @@ func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlis
 	var playlists []models.Playlist
 	url := remote.PlaylistsStartUrl
 
-	for &url != nil && len(url) > 0 {
+	for len(url) > 0 {
 		fmt.Println("Current next is " + url)
 		nextResponse, err := remote.fetchPlaylistsFromSoundCloud(url, accessToken)
 		playlists = append(playlists, nextResponse.Playlists...)
-		if err != nil {
+		if *err != nil {
 			return nil, err
 		}
-		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) == 0 {
-			break
-		}
-
-		url = *nextResponse.NextUrl
+		url = nextResponse.NextUrl
 	}
 
 	fmt.Println("Returning all playlists with size ", len(playlists))
@@ -48,18 +44,14 @@ func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *er
 	var allTracks []models.Track
 	url := remote.TracksStartUrl
 
-	for &url != nil && len(url) > 0 {
+	for len(url) > 0 {
 		fmt.Println("Current next is " + url)
 		nextResponse, err := remote.fetchTracksFromSoundCloud(url, accessToken)
 		allTracks = append(allTracks, nextResponse.Tracks...)
 		if *err != nil {
 			return nil, err
 		}
-		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) == 0 {
-			break
-		}
-
-		url = *nextResponse.NextUrl
+		url = nextResponse.NextUrl
 	}
 
 	fmt.Println("Returning all tracks with size ", len(allTracks))

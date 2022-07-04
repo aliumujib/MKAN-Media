@@ -2,7 +2,7 @@ package models
 
 type PlaylistsResponse struct {
 	Playlists []Playlist `json:"collection"`
-	NextUrl   *string    `json:"next_href"`
+	NextUrl   string     `json:"next_href"`
 }
 
 type Playlist struct {

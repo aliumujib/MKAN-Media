@@ -6,7 +6,7 @@ import (
 
 type TracksResponse struct {
 	Tracks  []Track `json:"collection"`
-	NextUrl *string `json:"next_href"`
+	NextUrl string  `json:"next_href"`
 }
 
 type Track struct {
