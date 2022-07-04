@@ -7,7 +7,6 @@ import (
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
 	"io/ioutil"
 	. "net/http"
-	"sync"
 )
 
 type RemoteImpl struct {
@@ -32,10 +31,10 @@ func (remote RemoteImpl) FetchAllPlaylists(accessToken string) ([]models.Playlis
 		fmt.Println("Current next is " + url)
 		nextResponse, err := remote.fetchPlaylistsFromSoundCloud(url, accessToken)
 		playlists = append(playlists, nextResponse.Playlists...)
-		if *err != nil {
+		if err != nil {
 			return nil, err
 		}
-		if nextResponse.NextUrl == nil {
+		if nextResponse.NextUrl == nil || len(*nextResponse.NextUrl) > 0 {
 			break
 		}
 
@@ -78,9 +77,8 @@ func cleanup(data interface{}) (interface{}, *error) {
 	return data, nil
 }
 
-func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(waitGroup sync.WaitGroup, playlistsURl string, accessToken string) (models.PlaylistsResponse, *error) {
+func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(playlistsURl string, accessToken string) (models.PlaylistsResponse, *error) {
 	playlists := models.PlaylistsResponse{}
-	defer waitGroup.Done()
 
 	request, err := NewRequest(MethodGet, playlistsURl, nil)
 	if err != nil {
@@ -112,7 +110,7 @@ func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(waitGroup sync.WaitGroup, 
 	return playlists, &err
 }
 
-func (remote RemoteImpl) fetchTracksFromSoundCloud(waitGroup sync.WaitGroup, tracksURl string, accessToken string) (models.TracksResponse, *error) {
+func (remote RemoteImpl) fetchTracksFromSoundCloud(tracksURl string, accessToken string) (models.TracksResponse, *error) {
 	tracks := models.TracksResponse{}
 
 	request, err := NewRequest(MethodGet, tracksURl, nil)
