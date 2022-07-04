@@ -16,12 +16,13 @@ import (
 )
 
 type TracksRepository interface {
-	RefreshAudioData(writer ResponseWriter, _ *Request)
 	GetAllTracks(writer ResponseWriter, request *Request)
 	GetAllPlaylists(writer ResponseWriter, _ *Request)
 	GetCurrentAuthToken(writer ResponseWriter, request *Request)
 	GetRecommendedMedia(writer ResponseWriter, request *Request)
-	RefreshRecommendedMedia(writer ResponseWriter, request *Request)
+
+	RefreshRecommendedMedia()
+	RefreshAudioData()
 }
 
 type SoundCloudTracksRepository struct {
@@ -67,23 +68,18 @@ func (repository SoundCloudTracksRepository) GetRecommendedMedia(writer Response
 	})
 }
 
-func (repository SoundCloudTracksRepository) RefreshRecommendedMedia(writer ResponseWriter, _ *Request) {
+func (repository SoundCloudTracksRepository) RefreshRecommendedMedia() {
 	recommendedTracks, err := repository.store.FetchSavedTracks("")
-	if respondedWithError(writer, err) {
-		return
+	if err != nil && *err != nil {
+		fmt.Println("Error and then return", *err)
 	}
 
 	count, err := repository.recommender.GenerateRecommendations(recommendedTracks)
-	if respondedWithError(writer, err) {
-		return
+	if err != nil && *err != nil {
+		fmt.Println("Error and then return", *err)
 	}
 
-	httplib.ResponseJSON(writer, StatusOK, GeneralResponse{
-		Success: true,
-		Data:    nil,
-		Error:   nil,
-		Message: "Generated : " + strconv.Itoa(count) + " recommended tracks",
-	})
+	fmt.Println("Generated : " + strconv.Itoa(count) + " recommended tracks")
 }
 
 func (repository SoundCloudTracksRepository) GetAllTracks(writer ResponseWriter, request *Request) {
@@ -122,28 +118,19 @@ func (repository SoundCloudTracksRepository) getToken() (string, *error) {
 	return token.AccessToken, err
 }
 
-func (repository SoundCloudTracksRepository) RefreshAudioData(writer ResponseWriter, _ *Request) {
+func (repository SoundCloudTracksRepository) RefreshAudioData() {
 	token, _ := repository.getToken()
 
-	fmt.Println("Fetching tracks")
 	trackCount, err := repository.refreshTrackData(token)
-	if respondedWithError(writer, err) {
-		return
+	if err != nil && *err != nil {
+		fmt.Println("Error and then return", *err)
 	}
-
-	fmt.Println("Fetching playlists")
 	playlistCount, err := repository.refreshPlaylistData(token)
-	if respondedWithError(writer, err) {
-		return
+	if err != nil && *err != nil {
+		fmt.Println("Error and then return", *err)
 	}
 
-	httplib.ResponseJSON(writer, StatusOK,
-		GeneralResponse{
-			Success: true,
-			Data:    nil,
-			Error:   nil,
-			Message: "Stored -> tracks: size " + strconv.Itoa(trackCount) + "\n Playlists: size " + strconv.Itoa(playlistCount),
-		})
+	fmt.Println("Stored -> tracks: size " + strconv.Itoa(trackCount) + "\n Playlists: size " + strconv.Itoa(playlistCount))
 }
 
 func respondedWithError(writer ResponseWriter, err *error) bool {
