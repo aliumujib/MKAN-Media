@@ -161,8 +161,14 @@ func respondedWithError(writer ResponseWriter, err *error) bool {
 func (repository SoundCloudTracksRepository) refreshTrackData(token string) (int, *error) {
 	trackList, _ := repository.remote.FetchAllTracks(token)
 
-	_ = repository.store.ClearTracks()
+	err0 := repository.store.ClearTracks()
+	if err0 != nil && *err0 != nil {
+		println("Error occurred while clearing tracks", *err0)
+	}
 	err1 := repository.store.SaveTracks(trackList)
+	if err1 != nil && *err1 != nil {
+		println("Error occurred while saving tracks", *err1)
+	}
 
 	return len(trackList), err1
 }
@@ -170,10 +176,17 @@ func (repository SoundCloudTracksRepository) refreshTrackData(token string) (int
 func (repository SoundCloudTracksRepository) refreshPlaylistData(token string) (int, *error) {
 	playlists, _ := repository.remote.FetchAllPlaylists(token)
 
-	_ = repository.store.ClearPlaylists()
-	err2 := repository.store.SavePlaylists(playlists)
+	err0 := repository.store.ClearPlaylists()
+	if err0 != nil && *err0 != nil {
+		println("Error occurred while saving tracks", *err0)
+	}
 
-	return len(playlists), err2
+	err1 := repository.store.SavePlaylists(playlists)
+	if err1 != nil && *err1 != nil {
+		println("Error occurred while saving tracks", *err1)
+	}
+
+	return len(playlists), err1
 }
 
 func (repository SoundCloudTracksRepository) GetCurrentAuthToken(writer ResponseWriter, _ *Request) {

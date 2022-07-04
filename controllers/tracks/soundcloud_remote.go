@@ -2,7 +2,6 @@ package tracks
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/MKA-Nigeria/mkanmedia-go/models"
 	"io/ioutil"
@@ -65,16 +64,6 @@ func (remote RemoteImpl) FetchAllTracks(accessToken string) ([]models.Track, *er
 
 	fmt.Println("Returning all tracks with size ", len(allTracks))
 	return allTracks, nil
-}
-
-func cleanup(data interface{}) (interface{}, *error) {
-	var err error
-	if r, ok := recover().(error); ok {
-		fmt.Println("An error occurred", r)
-		err = errors.New("internal error")
-		return nil, &err
-	}
-	return data, nil
 }
 
 func (remote RemoteImpl) fetchPlaylistsFromSoundCloud(playlistsURl string, accessToken string) (models.PlaylistsResponse, *error) {
