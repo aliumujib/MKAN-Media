@@ -31,9 +31,9 @@ func Router() *mux.Router {
 	scheduler := scheduling.NewMediaRefresher(gocron.NewScheduler(time.UTC), tracksRepo)
 
 	audioRoute := route.PathPrefix("/v1/audio").Subrouter()
-	audioRoute.HandleFunc("/fetch-all-tracks", tracksRepo.GetAllTracks).Methods("GET")
-	audioRoute.HandleFunc("/fetch-all-playlists", tracksRepo.GetAllPlaylists).Methods("GET")
-	audioRoute.HandleFunc("/current-auth", tracksRepo.GetCurrentAuthToken).Methods("GET")
+	audioRoute.HandleFunc("/tracks", tracksRepo.GetAllTracks).Methods("GET")
+	audioRoute.HandleFunc("/playlists", tracksRepo.GetAllPlaylists).Methods("GET")
+	audioRoute.HandleFunc("/stream-auth", tracksRepo.GetCurrentAuthToken).Methods("GET")
 	audioRoute.HandleFunc("/recommendations", tracksRepo.GetRecommendedMedia).Methods("GET")
 
 	scheduler.ScheduleMediaRefreshing()
